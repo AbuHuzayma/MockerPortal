@@ -8,6 +8,13 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Populated at container startup from env vars (see Dockerfile /
+         docker-entrypoint.d) so one built image can be promoted across
+         DEV/QA/PREPROD without a rebuild — falls back to build-time
+         import.meta.env when absent (e.g. `npm run dev`). Missing in
+         production if this file 404s: harmless, src/api/client.ts treats
+         window.__ENV__ as optional. -->
+    <script src="/env-config.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

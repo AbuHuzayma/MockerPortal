@@ -1,7 +1,14 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { getAccessToken, setAccessToken } from "../auth/tokenStore";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
+declare global {
+  interface Window {
+    /** Written by docker-entrypoint.d/env-config.sh at container startup — see index.html. */
+    __ENV__?: { VITE_API_BASE_URL?: string };
+  }
+}
+
+const baseURL = window.__ENV__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 export const apiClient = axios.create({
   baseURL,

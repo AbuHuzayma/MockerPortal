@@ -1,0 +1,173 @@
+# CI/CD pipeline — GitLab CI building this repo's two images and deploying
+# them to OpenShift. See docs/13-deployment.md §7 for the full narrative and
+# the list of CI/CD variables the platform team must configure per
+# environment; this file only references them by name, never with real
+# values (CLAUDE.md §6.7 / §16 — no secrets committed).
+#
+# Stages mirror docs/13-deployment.md §5's build-validation commands, plus
+# image build/push and the Kustomize-based OpenShift deploy from
+# deploy/openshift/.
+
+stages:
+  - test
+  - build-images
+  - deploy
+
+variables:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  # GitLab's built-in Container Registry for this project — always correct,
+  # never hand-edited.
+  BACKEND_IMAGE: "$CI_REGISTRY_IMAGE/backend"
+  FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend"
+
+# ---------------------------------------------------------------------------
+# test
+# ---------------------------------------------------------------------------
+
+backend:test:
+  stage: test
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  cache:
+    key: nuget-$CI_COMMIT_REF_SLUG
+    paths:
+      - .nuget/packages
+  variables:
+    NUGET_PACKAGES: "$CI_PROJECT_DIR/.nuget/packages"
+  script:
+    - dotnet restore backend/Portal.sln
+    - dotnet build backend/Portal.sln --configuration Release --no-restore
+    - dotnet test backend/Portal.sln --configuration Release --no-build
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+frontend:build:
+  stage: test
+  image: node:20-alpine
+  cache:
+    key: npm-$CI_COMMIT_REF_SLUG
+    paths:
+      - frontend/portal-ui/.npm
+  variables:
+    npm_config_cache: "$CI_PROJECT_DIR/frontend/portal-ui/.npm"
+  script:
+    - cd frontend/portal-ui
+    - npm ci
+    - npm run lint
+    - npm run build
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ---------------------------------------------------------------------------
+# build-images — only past the test gate, and only on the default branch
+# (feature branches/MRs stop at :test above; nothing is pushed to the
+# registry until a merge to main).
+#
+# Uses Docker-in-Docker, which needs a runner configured to allow privileged
+# containers. If the GitLab Runner pool for this project is OpenShift-hosted
+# and privileged containers are disallowed (common), swap this job for a
+# Kaniko-based build instead — same script intent (build + push to
+# $CI_REGISTRY), no daemon required. Not assumed here without confirming
+# which runner executor is actually available.
+# ---------------------------------------------------------------------------
+
+.build-image:
+  stage: build-images
+  image: docker:27
+  services:
+    - docker:27-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+backend:build-image:
+  extends: .build-image
+  needs: ["backend:test"]
+  script:
+    - docker build -f backend/Portal.Api/Dockerfile -t "$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA" -t "$BACKEND_IMAGE:latest" .
+    - docker push "$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - docker push "$BACKEND_IMAGE:latest"
+
+frontend:build-image:
+  extends: .build-image
+  needs: ["frontend:build"]
+  script:
+    - docker build -f frontend/portal-ui/Dockerfile -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" -t "$FRONTEND_IMAGE:latest" frontend/portal-ui
+    - docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - docker push "$FRONTEND_IMAGE:latest"
+
+# ---------------------------------------------------------------------------
+# deploy — `oc` + standalone `kustomize` against deploy/openshift/overlays/*.
+# One built pair of images is promoted DEV → QA → PREPROD unchanged
+# (re-tagged, never rebuilt) — see docs/13-deployment.md §7.
+#
+# Required CI/CD variables per environment (Settings → CI/CD → Variables,
+# masked + protected; the platform team owns the actual values):
+#   OPENSHIFT_SERVER_<ENV>     e.g. OPENSHIFT_SERVER_DEV
+#   OPENSHIFT_TOKEN_<ENV>      a ServiceAccount token scoped to that
+#                              namespace only (oc create token / a
+#                              long-lived SA secret), never a personal token
+#   OPENSHIFT_NAMESPACE_<ENV>  the project/namespace name for that
+#                              environment
+# ---------------------------------------------------------------------------
+
+.deploy:
+  stage: deploy
+  image: registry.redhat.io/openshift4/ose-cli:latest
+  before_script:
+    - curl -sfL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz" | tar -xz -C /usr/local/bin
+    - oc login --server="$OPENSHIFT_SERVER" --token="$OPENSHIFT_TOKEN"
+    - oc project "$OPENSHIFT_NAMESPACE"
+  script:
+    - cd "deploy/openshift/overlays/$ENVIRONMENT_NAME"
+    - kustomize edit set image "portal-api=$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - kustomize edit set image "portal-ui=$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - oc apply -k .
+    - oc rollout status deployment/portal-api --timeout=180s
+    - oc rollout status deployment/portal-ui --timeout=180s
+
+deploy:dev:
+  extends: .deploy
+  needs: ["backend:build-image", "frontend:build-image"]
+  variables:
+    ENVIRONMENT_NAME: dev
+    OPENSHIFT_SERVER: "$OPENSHIFT_SERVER_DEV"
+    OPENSHIFT_TOKEN: "$OPENSHIFT_TOKEN_DEV"
+    OPENSHIFT_NAMESPACE: "$OPENSHIFT_NAMESPACE_DEV"
+  environment:
+    name: dev
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+deploy:qa:
+  extends: .deploy
+  needs: ["backend:build-image", "frontend:build-image"]
+  variables:
+    ENVIRONMENT_NAME: qa
+    OPENSHIFT_SERVER: "$OPENSHIFT_SERVER_QA"
+    OPENSHIFT_TOKEN: "$OPENSHIFT_TOKEN_QA"
+    OPENSHIFT_NAMESPACE: "$OPENSHIFT_NAMESPACE_QA"
+  environment:
+    name: qa
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+
+deploy:preprod:
+  extends: .deploy
+  needs: ["deploy:qa"]
+  variables:
+    ENVIRONMENT_NAME: preprod
+    OPENSHIFT_SERVER: "$OPENSHIFT_SERVER_PREPROD"
+    OPENSHIFT_TOKEN: "$OPENSHIFT_TOKEN_PREPROD"
+    OPENSHIFT_NAMESPACE: "$OPENSHIFT_NAMESPACE_PREPROD"
+  environment:
+    name: preprod
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual

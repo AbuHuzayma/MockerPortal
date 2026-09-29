@@ -1,0 +1,19 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: portal-api
+  labels:
+    app.kubernetes.io/name: portal-api
+    app.kubernetes.io/part-of: mockerportal
+spec:
+  # No host: OpenShift generates <name>-<namespace>.<cluster-apps-domain> on
+  # first apply. Patch in a real corporate hostname per environment overlay
+  # once the cluster's apps domain is known — see docs/13-deployment.md §7.
+  to:
+    kind: Service
+    name: portal-api
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

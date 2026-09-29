@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: portal-api-config
+  labels:
+    app.kubernetes.io/name: portal-api
+    app.kubernetes.io/part-of: mockerportal
+data:
+  # Selects appsettings.{ASPNETCORE_ENVIRONMENT}.json — must match a file
+  # under backend/Portal.Api exactly (case-sensitive on Linux): Development,
+  # QA, or Preprod. Overridden per environment overlay.
+  ASPNETCORE_ENVIRONMENT: "Development"
+  # EF Core migrations apply automatically on pod start — see Program.cs.
+  Database__AutoMigrate: "true"
+  # CHANGE_ME: OpenShift auto-generates the frontend Route's hostname on
+  # first apply (deploy/openshift/base/frontend-route.yaml has no host set).
+  # Run `oc get route portal-ui -o jsonpath='{.spec.host}'` after the first
+  # deploy, then set the real value here (with https://) and re-apply — see
+  # docs/13-deployment.md §7.
+  Cors__AllowedOrigins__0: "https://CHANGE_ME"

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: portal-ui-config
+  labels:
+    app.kubernetes.io/name: portal-ui
+    app.kubernetes.io/part-of: mockerportal
+data:
+  # Consumed by docker-entrypoint.d/env-config.sh at container start, not at
+  # build time — the same image is promoted across DEV/QA/PREPROD (see
+  # frontend/portal-ui/Dockerfile). CHANGE_ME: fill in with the real
+  # portal-api Route hostname after its first apply (mirrors the CORS
+  # CHANGE_ME in backend-configmap.yaml) — see docs/13-deployment.md §7.
+  VITE_API_BASE_URL: "https://CHANGE_ME/api/v1"

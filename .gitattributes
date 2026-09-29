@@ -1,0 +1,8 @@
+# Force LF everywhere, regardless of the checkout OS. Windows dev machines
+# are common on this project; without this, autocrlf turns shell scripts
+# into CRLF and breaks `#!/bin/sh` inside Linux containers (frontend
+# Dockerfile's docker-entrypoint.d/env-config.sh) — a classic, easy-to-miss
+# failure mode that only shows up at container runtime, not at build time.
+* text=auto eol=lf
+
+*.sh text eol=lf

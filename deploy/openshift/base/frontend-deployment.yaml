@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portal-ui
+  labels:
+    app.kubernetes.io/name: portal-ui
+    app.kubernetes.io/part-of: mockerportal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: portal-ui
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: portal-ui
+        app.kubernetes.io/part-of: mockerportal
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: portal-ui
+          # Placeholder — set per environment via `kustomize edit set image`
+          # in the GitLab CI deploy job (.gitlab-ci.yml), never hardcoded here.
+          image: portal-ui:latest
+          ports:
+            - containerPort: 8080
+              name: http
+          envFrom:
+            - configMapRef:
+                name: portal-ui-config
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false # env-config.js is (re)written into the image dir at startup.
+            capabilities:
+              drop: ["ALL"]
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi

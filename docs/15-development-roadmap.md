@@ -193,11 +193,17 @@ the real implementation swapped in later behind the same interface.
 - `OperationLogs` (docs/10 §6) implemented — `IOperationLogService`/
   `OperationLogService`, written by `MockServingController` for every mock
   call (Phase 6).
-- **Deferred — genuinely org-specific, not resolvable from the spec alone**:
-  CI pipeline (needs the org's CI platform confirmed) and the remaining
-  `docs/13-deployment.md` unknowns (real DB/secret-store endpoints, actual
-  external API base URLs). Documented as gaps, not guessed at — consistent
-  with the master spec's "don't invent" rule.
+- CI pipeline confirmed and implemented — GitLab CI (`.gitlab-ci.yml`)
+  building/testing both apps and deploying to OpenShift per environment via
+  Kustomize (`deploy/openshift/`); see docs/13-deployment.md §6 for the full
+  pipeline/manifest layout.
+- **Still deferred — genuinely org-specific, not resolvable from the spec
+  alone**: the real OpenShift cluster URLs/tokens/namespace names and apps
+  domain (every one is a GitLab CI/CD variable or a `CHANGE_ME` placeholder,
+  never invented), and the remaining `docs/13-deployment.md` unknowns (real
+  DB/secret-store endpoints, actual external API base URLs, log aggregation
+  destination). Documented as gaps, not guessed at — consistent with the
+  master spec's "don't invent" rule.
 
 ## Explicit non-goals (every phase)
 

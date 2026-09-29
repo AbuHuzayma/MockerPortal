@@ -110,14 +110,26 @@ dotnet test backend/Portal.sln
 npm --prefix frontend/portal-ui run test
 ```
 
+## CI/CD & deployment
+
+GitLab CI (`.gitlab-ci.yml`) builds/tests both apps on every merge request
+and push to the default branch, then builds and pushes container images and
+deploys to OpenShift (one namespace per environment) via the Kustomize
+manifests in `deploy/openshift/`. See
+[`docs/13-deployment.md`](docs/13-deployment.md) §6 for the full pipeline
+and manifest layout, including the CI/CD variables a platform team must
+configure per environment (never invented/committed here).
+
 ## Project structure
 
 ```
 /
-├── CLAUDE.md            # rules this repo is built under — read first
-├── docs/                 # architecture & design documentation
+├── CLAUDE.md               # rules this repo is built under — read first
+├── .gitlab-ci.yml          # CI: build/test → images → OpenShift deploy
+├── docs/                   # architecture & design documentation
+├── deploy/openshift/       # Kustomize base + DEV/QA/PREPROD overlays
 ├── backend/                # .NET solution (Api, Application, Domain,
 │                              Infrastructure, Integrations)
-├── frontend/portal-ui/       # React + TypeScript + Vite app
-└── tests/                      # unit / integration / API test projects
+├── frontend/portal-ui/     # React + TypeScript + Vite app
+└── tests/                  # unit / integration / API test projects
 ```

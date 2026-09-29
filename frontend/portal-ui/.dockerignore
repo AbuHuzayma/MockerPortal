@@ -1,0 +1,11 @@
+# Build context here is frontend/portal-ui itself (see Dockerfile). Without
+# this, `COPY . .` after `npm ci` would clobber the container's freshly
+# installed node_modules with whatever's on the host (wrong platform
+# binaries for native deps like esbuild/rollup).
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.log
+.vscode/

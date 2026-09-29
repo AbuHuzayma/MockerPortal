@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+# Real image name/tag are set by the GitLab CI deploy job via
+# `kustomize edit set image` (.gitlab-ci.yml) — nothing to change here.
+
+patches:
+  - target:
+      kind: ConfigMap
+      name: portal-api-config
+    patch: |
+      - op: replace
+        path: /data/ASPNETCORE_ENVIRONMENT
+        value: Preprod
+  # PREPROD is the closest environment to production traffic this portal
+  # ever sees (real Card/Beneficiary/B2B/IdentityVerification integrations,
+  # per appsettings.Preprod.json) — run with 2 replicas instead of 1.
+  - target:
+      kind: Deployment
+      name: portal-api
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 2
+  - target:
+      kind: Deployment
+      name: portal-ui
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 2

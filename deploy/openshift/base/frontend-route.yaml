@@ -1,0 +1,17 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: portal-ui
+  labels:
+    app.kubernetes.io/name: portal-ui
+    app.kubernetes.io/part-of: mockerportal
+spec:
+  # No host — see backend-route.yaml's comment; the same applies here.
+  to:
+    kind: Service
+    name: portal-ui
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
