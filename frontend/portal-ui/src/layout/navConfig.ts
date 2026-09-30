@@ -1,5 +1,5 @@
 import DashboardIcon from "@mui/icons-material/DashboardOutlined";
-import SearchIcon from "@mui/icons-material/SearchOutlined";
+import PersonSearchIcon from "@mui/icons-material/PersonSearchOutlined";
 import BadgeIcon from "@mui/icons-material/BadgeOutlined";
 import PhoneIcon from "@mui/icons-material/PhoneInTalkOutlined";
 import EventIcon from "@mui/icons-material/EventOutlined";
@@ -8,7 +8,6 @@ import CreditCardIcon from "@mui/icons-material/CreditCardOutlined";
 import GroupIcon from "@mui/icons-material/GroupOutlined";
 import LockOpenIcon from "@mui/icons-material/LockOpenOutlined";
 import FingerprintIcon from "@mui/icons-material/FingerprintOutlined";
-import AssignmentIcon from "@mui/icons-material/AssignmentOutlined";
 import StorefrontIcon from "@mui/icons-material/StorefrontOutlined";
 import HubIcon from "@mui/icons-material/HubOutlined";
 import ApiIcon from "@mui/icons-material/ApiOutlined";
@@ -37,7 +36,7 @@ export const navSections: NavSection[] = [
   {
     title: "Customer",
     items: [
-      { label: "Search", path: "/customers/search", icon: SearchIcon, permission: "customer.view" },
+      { label: "Overview", path: "/customers/overview", icon: PersonSearchIcon, permission: "customer.view" },
       { label: "KYC", path: "/customers/kyc", icon: BadgeIcon, permission: "customer.kyc.view" },
       { label: "IVR", path: "/customers/ivr", icon: PhoneIcon, permission: "customer.ivr.view" },
       { label: "Creation", path: "/customers/creation", icon: EventIcon, permission: "customer.creation.view" },
@@ -46,13 +45,12 @@ export const navSections: NavSection[] = [
       { label: "Beneficiary", path: "/customers/beneficiary", icon: GroupIcon, permission: "customer.beneficiary.view" },
       { label: "Security", path: "/customers/security", icon: LockOpenIcon, permission: "customer.security.view" },
       { label: "Biometrics", path: "/customers/biometrics", icon: FingerprintIcon, permission: "customer.biometric.view" },
-      { label: "Onboarding", path: "/customers/onboarding", icon: AssignmentIcon, permission: "customer.onboarding.view" },
     ],
   },
   {
     title: "Merchant",
     items: [
-      { label: "Merchant", path: "/merchants", icon: StorefrontIcon, permission: "merchant.view" },
+      { label: "Merchant Details", path: "/merchants", icon: StorefrontIcon, permission: "merchant.view" },
       { label: "B2B", path: "/merchants/b2b", icon: HubIcon, permission: "merchant.b2b.view" },
     ],
   },

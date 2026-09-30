@@ -47,11 +47,23 @@ result should build, and be committed, before moving to the next.
   customer context (`CustomerContextValue` — master spec §9's exact shape)
   held client-side in `CustomerContext`/`useCustomerContext`, in-memory only
   (cleared on logout, not persisted across a reload — a reload re-searches).
-- Read-only customer profile view (`CustomerProfilePage`) covering the
-  identity/status subset of the master spec's KYC field list; the full KYC
-  field set is edited by the dedicated screen in Phase 4.
+  `displayName` was later added to that shape, for display only.
+- Navigation model (revised after Phase 7): the sidebar lists only
+  **update** screens plus one read-only **Customer Overview**. Every customer
+  screen is wrapped in `CustomerWorkspace`, whose `CustomerLookupBar` shows
+  the active customer and searches/switches by mobile number in place (there
+  is no separate Search page); merchant screens use the equivalent
+  `MerchantWorkspace`/`MerchantLookupBar` (name search, pick from results).
+  With nothing selected a screen shows a prompt instead of redirecting; on a
+  switch the screen is remounted so no form/dialog state carries over.
+- `CustomerOverviewPage` is the single read-only view: the profile fields
+  plus one collapsible section per data area (KYC, IVR, Creation, OTP,
+  Cards, Beneficiary, Security, Biometrics, Onboarding), each rendered from
+  its screen metadata via `ReadOnlyFieldGrid`, shown only with that area's
+  `*.view` permission, and fetched only when expanded. Onboarding has no
+  update screen, so it lives only here.
 - Error handling: `CUSTOMER_NOT_FOUND` (404) and `VALIDATION_FAILED` (400),
-  both rendered inline on the search page.
+  both rendered inline in the lookup bar.
 - Audit foundation: `AuditLogs` table + `IAuditService`/`AuditService`
   implemented and covered by integration tests proving the write path works
   end-to-end; no product code writes a real entry yet (no mutations exist
@@ -110,7 +122,8 @@ result should build, and be committed, before moving to the next.
    BiometricDatabase entirely unknown).
 9. Onboarding ✅ complete — read-only, composed from `ICustomerService` +
    `ICreationService` (no new provider — every field it needs already
-   exists elsewhere).
+   exists elsewhere). Later folded into the Customer Overview as a
+   section; it no longer has its own screen or menu entry.
 
 Real external API integrations (Card, Beneficiary, Absher/Yakeen) are not
 implemented until their contracts are supplied — each screen ships against

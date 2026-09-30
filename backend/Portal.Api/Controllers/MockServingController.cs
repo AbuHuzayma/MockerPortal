@@ -12,8 +12,12 @@ namespace Portal.Api.Controllers;
 /// §5. Called by other systems under test, not by an authenticated portal
 /// user, so it is intentionally anonymous (network/environment placement is
 /// the real access control) but every call is written to OperationLogs.
+/// Excluded from Swagger: the catch-all route accepts every HTTP method (the
+/// configured MockEndpoint decides which one matches), which OpenAPI cannot
+/// describe as a single operation.
 /// </summary>
 [ApiController]
+[ApiExplorerSettings(IgnoreApi = true)]
 [AllowAnonymous]
 [Route("mock/{apiCode}")]
 public sealed class MockServingController(IMockEngine mockEngine, IOperationLogService operationLogService) : ControllerBase

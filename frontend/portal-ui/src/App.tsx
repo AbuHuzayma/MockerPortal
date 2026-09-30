@@ -7,12 +7,13 @@ import { navSections } from "./layout/navConfig";
 import { AuthProvider } from "./auth/AuthContext";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { CustomerProvider } from "./customers/CustomerContext";
+import { CustomerWorkspace } from "./customers/CustomerWorkspace";
 import { MerchantProvider } from "./merchants/MerchantContext";
+import { MerchantWorkspace } from "./merchants/MerchantWorkspace";
 import { LoginPage } from "./pages/LoginPage";
 import { ForbiddenPage } from "./pages/ForbiddenPage";
 import { DashboardPage } from "./pages/DashboardPage";
-import { CustomerSearchPage } from "./pages/CustomerSearchPage";
-import { CustomerProfilePage } from "./pages/CustomerProfilePage";
+import { CustomerOverviewPage } from "./pages/CustomerOverviewPage";
 import { KycPage } from "./pages/KycPage";
 import { IvrPage } from "./pages/IvrPage";
 import { CreationPage } from "./pages/CreationPage";
@@ -21,8 +22,6 @@ import { CardsPage } from "./pages/CardsPage";
 import { BeneficiaryPage } from "./pages/BeneficiaryPage";
 import { SecurityPage } from "./pages/SecurityPage";
 import { BiometricPage } from "./pages/BiometricPage";
-import { OnboardingPage } from "./pages/OnboardingPage";
-import { MerchantSearchPage } from "./pages/MerchantSearchPage";
 import { MerchantProfilePage } from "./pages/MerchantProfilePage";
 import { MerchantB2BPage } from "./pages/MerchantB2BPage";
 import { SampleScreenPage } from "./pages/SampleScreenPage";
@@ -36,7 +35,10 @@ const queryClient = new QueryClient({
   },
 });
 
+// Every screen here is rendered inside CustomerWorkspace / MerchantWorkspace
+// (lookup bar on top) and gated by its nav item's permission.
 const customerScreens: { path: string; element: React.ReactNode }[] = [
+  { path: "/customers/overview", element: <CustomerOverviewPage /> },
   { path: "/customers/kyc", element: <KycPage /> },
   { path: "/customers/ivr", element: <IvrPage /> },
   { path: "/customers/creation", element: <CreationPage /> },
@@ -45,7 +47,11 @@ const customerScreens: { path: string; element: React.ReactNode }[] = [
   { path: "/customers/beneficiary", element: <BeneficiaryPage /> },
   { path: "/customers/security", element: <SecurityPage /> },
   { path: "/customers/biometrics", element: <BiometricPage /> },
-  { path: "/customers/onboarding", element: <OnboardingPage /> },
+];
+
+const merchantScreens: { path: string; element: React.ReactNode }[] = [
+  { path: "/merchants", element: <MerchantProfilePage /> },
+  { path: "/merchants/b2b", element: <MerchantB2BPage /> },
 ];
 
 const apiMockerPages: { path: string; title: string; codes: string[] | "other"; defaultCodePrefix: string }[] = [
@@ -77,24 +83,20 @@ export default function App() {
                       <Route path="/forbidden" element={<ForbiddenPage />} />
                       <Route path="/dev/sample-screen" element={<SampleScreenPage />} />
 
-                      <Route element={<ProtectedRoute permission={permissionByPath.get("/customers/search")} />}>
-                        <Route path="/customers/search" element={<CustomerSearchPage />} />
-                        <Route path="/customers/profile" element={<CustomerProfilePage />} />
+                      <Route element={<CustomerWorkspace />}>
+                        {customerScreens.map(({ path, element }) => (
+                          <Route key={path} element={<ProtectedRoute permission={permissionByPath.get(path)} />}>
+                            <Route path={path} element={element} />
+                          </Route>
+                        ))}
                       </Route>
 
-                      {customerScreens.map(({ path, element }) => (
-                        <Route key={path} element={<ProtectedRoute permission={permissionByPath.get(path)} />}>
-                          <Route path={path} element={element} />
-                        </Route>
-                      ))}
-
-                      <Route element={<ProtectedRoute permission={permissionByPath.get("/merchants")} />}>
-                        <Route path="/merchants" element={<MerchantSearchPage />} />
-                        <Route path="/merchants/profile" element={<MerchantProfilePage />} />
-                      </Route>
-
-                      <Route element={<ProtectedRoute permission={permissionByPath.get("/merchants/b2b")} />}>
-                        <Route path="/merchants/b2b" element={<MerchantB2BPage />} />
+                      <Route element={<MerchantWorkspace />}>
+                        {merchantScreens.map(({ path, element }) => (
+                          <Route key={path} element={<ProtectedRoute permission={permissionByPath.get(path)} />}>
+                            <Route path={path} element={element} />
+                          </Route>
+                        ))}
                       </Route>
 
                       {apiMockerPages.map(({ path, title, codes, defaultCodePrefix }) => (

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, Typography, CircularProgress, Alert, Snackbar } from "@mui/material";
 import { apiClient, type ApiEnvelope } from "../api/client";
@@ -43,7 +42,7 @@ export function MerchantB2BPage() {
   });
 
   if (!merchantId) {
-    return <Navigate to="/merchants" replace />;
+    return null; // MerchantWorkspace only renders this screen once a merchant is selected.
   }
 
   return (

@@ -13,12 +13,16 @@ export interface Customer {
   blacklistStatus: string | null;
 }
 
+/** No beneficiary list/search API exists yet, so beneficiary screens operate on this fixed test beneficiary. */
+export const DEFAULT_BENEFICIARY_ID = "BEN-0001";
+
 /** The shape carried across customer screens once a customer is selected — master spec §9. */
 export interface CustomerContextValue {
   customerId: string;
   customerNumber: string;
   mobileNumber: string;
   t24CustomerId: string | null;
+  displayName: string | null;
 }
 
 export function toCustomerContext(customer: Customer): CustomerContextValue {
@@ -27,5 +31,6 @@ export function toCustomerContext(customer: Customer): CustomerContextValue {
     customerNumber: customer.custNumber,
     mobileNumber: customer.mobileNo,
     t24CustomerId: customer.t24CustomerId,
+    displayName: [customer.firstName, customer.lastName].filter(Boolean).join(" ") || null,
   };
 }

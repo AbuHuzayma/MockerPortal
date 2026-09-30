@@ -1,14 +1,13 @@
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, Typography, CircularProgress, Alert, Snackbar } from "@mui/material";
 import { apiClient, type ApiEnvelope } from "../api/client";
 import { useCustomerContext } from "../customers/useCustomerContext";
+import { DEFAULT_BENEFICIARY_ID } from "../customers/customerTypes";
 import { DynamicForm } from "../components/dynamic-form/DynamicForm";
 import type { FormValues } from "../components/dynamic-form/types";
 
 const SCREEN_CODE = "CUSTOMER_BENEFICIARY";
-const DEFAULT_BENEFICIARY_ID = "BEN-0001";
 
 export function BeneficiaryPage() {
   const { customer } = useCustomerContext();
@@ -48,7 +47,7 @@ export function BeneficiaryPage() {
   });
 
   if (!customer) {
-    return <Navigate to="/customers/search" replace />;
+    return null; // CustomerWorkspace only renders this screen once a customer is selected.
   }
 
   return (

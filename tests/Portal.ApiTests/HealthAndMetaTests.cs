@@ -33,5 +33,15 @@ public class HealthAndMetaTests(PortalApiFactory factory) : IClassFixture<Portal
         Assert.True(body!.Success);
     }
 
+    [Fact]
+    public async Task Swagger_document_generates_without_error()
+    {
+        var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
     private sealed record EnvelopeProbe(bool Success, string CorrelationId);
 }

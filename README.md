@@ -86,8 +86,10 @@ cd backend/Portal.Api
 dotnet run
 ```
 
-API available at `https://localhost:5001` (Swagger at `/swagger` in
-DEV/QA). Health check at `/api/v1/health`.
+API available at `http://localhost:5000` (Swagger at `/swagger` in
+DEV/QA). Health check at `/api/v1/health`. `dotnet run --launch-profile https`
+additionally serves `https://localhost:5001`. The Vite dev proxy targets
+port 5000, so it works with either profile.
 
 ## Run frontend
 

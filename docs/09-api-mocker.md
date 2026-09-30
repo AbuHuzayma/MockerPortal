@@ -136,7 +136,8 @@ Shipped as designed above, with one clarification learned during
 implementation: every admin operation (`/api/v1/mock-admin/apis/...`) and
 the serving route (`/mock/{apiCode}/...`) is scoped to the environment this
 portal instance is deployed as (`IEnvironmentContext`) — a `MockApi.Code` is
-only unique within that scope, not globally. A shared dev/test database can
+only unique within that scope, not globally (enforced by the unique
+`IX_MockApis_Environment_Code` index on `(Environment, Code)`). A shared dev/test database can
 still hold the same code across DEV/QA/PREPROD rows (as the Absher/Yakeen/
 ELM starter seed does); each environment's deployment only ever sees and
 manages its own rows. `MockServingController` writes one `OperationLogs`

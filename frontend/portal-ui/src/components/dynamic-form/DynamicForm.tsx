@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
 import {
   Grid,
   Box,
@@ -19,10 +18,10 @@ import {
   TableCell,
   Typography,
 } from "@mui/material";
-import { apiClient, type ApiEnvelope } from "../../api/client";
 import { buildSchemaFromFields } from "./buildSchema";
 import { DynamicField } from "./DynamicField";
-import type { ScreenAction, ScreenDefinition, FormValues } from "./types";
+import { useScreenDefinition } from "./useScreenDefinition";
+import type { ScreenAction, FormValues } from "./types";
 
 interface DynamicFormProps {
   screenCode: string;
@@ -32,14 +31,7 @@ interface DynamicFormProps {
 }
 
 export function DynamicForm({ screenCode, values, onSubmit, isSaving }: DynamicFormProps) {
-  const screenQuery = useQuery({
-    queryKey: ["screen-definition", screenCode],
-    queryFn: async () => {
-      const response = await apiClient.get<ApiEnvelope<ScreenDefinition>>(`/screens/${screenCode}`);
-      return response.data.data!;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
+  const screenQuery = useScreenDefinition(screenCode);
 
   const fields = useMemo(() => screenQuery.data?.fields ?? [], [screenQuery.data]);
   const schema = useMemo(() => buildSchemaFromFields(fields), [fields]);

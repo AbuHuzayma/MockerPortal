@@ -1,4 +1,3 @@
-import { Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, Typography, CircularProgress, Alert } from "@mui/material";
 import { apiClient, type ApiEnvelope } from "../api/client";
@@ -21,7 +20,7 @@ export function BiometricPage() {
   });
 
   if (!customer) {
-    return <Navigate to="/customers/search" replace />;
+    return null; // CustomerWorkspace only renders this screen once a customer is selected.
   }
 
   return (

@@ -1,9 +1,15 @@
 import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAuth } from "../auth/useAuth";
 
+export interface SelectedMerchant {
+  merchantId: string;
+  displayName: string | null;
+}
+
 interface MerchantContextValue {
+  merchant: SelectedMerchant | null;
   merchantId: string | null;
-  setMerchantId: (merchantId: string) => void;
+  setMerchant: (merchant: SelectedMerchant) => void;
   clearMerchant: () => void;
 }
 
@@ -13,20 +19,20 @@ export const MerchantContext = createContext<MerchantContextValue | null>(null);
 /** Mirrors CustomerContext — in-memory only, cleared on logout, not persisted across a reload. */
 export function MerchantProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
-  const [merchantId, setMerchantIdState] = useState<string | null>(null);
+  const [merchant, setMerchantState] = useState<SelectedMerchant | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
-      setMerchantIdState(null);
+      setMerchantState(null);
     }
   }, [isAuthenticated]);
 
-  const setMerchantId = useCallback((id: string) => setMerchantIdState(id), []);
-  const clearMerchant = useCallback(() => setMerchantIdState(null), []);
+  const setMerchant = useCallback((next: SelectedMerchant) => setMerchantState(next), []);
+  const clearMerchant = useCallback(() => setMerchantState(null), []);
 
   const value = useMemo<MerchantContextValue>(
-    () => ({ merchantId, setMerchantId, clearMerchant }),
-    [merchantId, setMerchantId, clearMerchant],
+    () => ({ merchant, merchantId: merchant?.merchantId ?? null, setMerchant, clearMerchant }),
+    [merchant, setMerchant, clearMerchant],
   );
 
   return <MerchantContext.Provider value={value}>{children}</MerchantContext.Provider>;

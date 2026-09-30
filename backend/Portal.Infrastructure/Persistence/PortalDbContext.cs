@@ -172,9 +172,11 @@ public sealed class PortalDbContext(DbContextOptions<PortalDbContext> options)
             entity.ToTable("MockApis");
             entity.HasKey(a => a.Id);
             entity.Property(a => a.Code).HasMaxLength(50).IsRequired();
-            entity.HasIndex(a => a.Code).IsUnique();
             entity.Property(a => a.Name).HasMaxLength(200).IsRequired();
             entity.Property(a => a.Environment).HasMaxLength(20).IsRequired();
+            // Code is unique per environment, not globally — MockDataSeeder seeds the
+            // same codes (ABSHER, YAKEEN, ELM) for DEV, QA and PREPROD.
+            entity.HasIndex(a => new { a.Environment, a.Code }).IsUnique();
         });
 
         builder.Entity<MockEndpoint>(entity =>
